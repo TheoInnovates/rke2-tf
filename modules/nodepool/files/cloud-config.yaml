@@ -1,9 +1,4 @@
 #cloud-config
-ssh_authorized_keys:
-%{ for _ in ssh_authorized_keys }
-  - ${_}
-%{ endfor }
-
 users:
   - default
   

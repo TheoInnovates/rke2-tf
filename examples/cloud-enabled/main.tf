@@ -7,7 +7,7 @@ provider "aws" {
 
 locals {
   cluster_name = "cloud-enabled"
-  aws_region   = "us-gov-west-1"
+  aws_region   = "us-east-1"
   cidr         = "10.88.0.0/16"
   ssh_allowed_cidrs = [
     "0.0.0.0/0"
@@ -19,13 +19,13 @@ locals {
   }
 }
 
-data "aws_ami" "rhel8" {
+data "aws_ami" "rhel9" {
   most_recent = true
-  owners      = ["219670896067"] # owner is specific to aws gov cloud
+  owners      = ["309956199498"] # owner is specific to aws gov cloud
 
   filter {
     name   = "name"
-    values = ["RHEL-8*"]
+    values = ["RHEL-9*"]
   }
 
   filter {
@@ -96,7 +96,7 @@ module "rke2" {
   vpc_id       = module.vpc.vpc_id
   subnets      = module.vpc.public_subnets # Note: Public subnets used for demo purposes, this is not recommended in production
 
-  ami                   = data.aws_ami.rhel8.image_id
+  ami                   = data.aws_ami.rhel9.image_id
   ssh_authorized_keys   = [tls_private_key.ssh.public_key_openssh]
   instance_type         = "t3.medium"
   controlplane_internal = false # Note this defaults to best practice of true, but is explicitly set to public for demo purposes
@@ -106,7 +106,7 @@ module "rke2" {
   enable_ccm        = true
   enable_autoscaler = true
 
-  rke2_config = yamlencode({ "node-label" : ["name=server", "os=rhel8"] })
+  rke2_config = yamlencode({ "node-label" : ["name=server", "os=rhel9"] })
 
   rke2_channel = "v1.27"
 }
@@ -121,7 +121,7 @@ module "agents" {
   vpc_id  = module.vpc.vpc_id
   subnets = module.vpc.public_subnets # Note: Public subnets used for demo purposes, this is not recommended in production
 
-  ami                 = data.aws_ami.rhel8.image_id
+  ami                 = data.aws_ami.rhel9.image_id
   ssh_authorized_keys = [tls_private_key.ssh.public_key_openssh]
   spot                = true
   asg                 = { min : 1, max : 10, desired : 2 }
@@ -131,7 +131,7 @@ module "agents" {
   enable_ccm        = true
   enable_autoscaler = true
 
-  rke2_config = yamlencode({ "node-label" : ["name=generic", "os=rhel8"] })
+  rke2_config = yamlencode({ "node-label" : ["name=generic", "os=rhel9"] })
 
   cluster_data = module.rke2.cluster_data
 

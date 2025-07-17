@@ -17,7 +17,7 @@ locals {
     token      = module.statestore.token
   }
 
-  lb_subnets        = var.lb_subnets == null ? var.subnets : var.lb_subnets
+  lb_subnets        = module.vpc.private_subnets
   target_group_arns = module.cp_lb.target_group_arns
 }
 
@@ -54,7 +54,7 @@ module "statestore" {
 module "cp_lb" {
   source  = "./modules/nlb"
   name    = local.uname
-  vpc_id  = var.vpc_id
+  vpc_id  = module.vpc.vpc_id
   subnets = local.lb_subnets
 
   enable_cross_zone_load_balancing = var.controlplane_enable_cross_zone_load_balancing
@@ -75,7 +75,7 @@ module "cp_lb" {
 resource "aws_security_group" "cluster" {
   name        = "${local.uname}-rke2-cluster"
   description = "Shared ${local.uname} cluster security group"
-  vpc_id      = var.vpc_id
+  vpc_id      = module.vpc.vpc_id
 
   tags = merge({
     "shared" = "true",
@@ -106,7 +106,7 @@ resource "aws_security_group_rule" "cluster_egress" {
 # Server Security Group
 resource "aws_security_group" "server" {
   name        = "${local.uname}-rke2-server"
-  vpc_id      = var.vpc_id
+  vpc_id      = module.vpc.vpc_id
   description = "${local.uname} rke2 server node pool"
   tags        = merge(local.default_tags, var.tags)
 }
@@ -154,6 +154,15 @@ resource "aws_iam_role_policy" "aws_required" {
   policy = data.aws_iam_policy_document.aws_required[count.index].json
 }
 
+resource "aws_iam_role_policy" "ssm_session" {
+  count = var.iam_instance_profile == "" ? 1 : 0
+
+  name   = "${local.uname}-rke2-server-ssm-session"
+  role   = module.iam[count.index].role
+  policy = data.aws_iam_policy_document.ssm_session.json
+}
+
+
 resource "aws_iam_role_policy" "aws_ccm" {
   count = var.iam_instance_profile == "" && var.enable_ccm ? 1 : 0
 
@@ -193,8 +202,8 @@ module "servers" {
   source = "./modules/nodepool"
   name   = "${local.uname}-server"
 
-  vpc_id                      = var.vpc_id
-  subnets                     = var.subnets
+  vpc_id                      = module.vpc.vpc_id
+  subnets                     = module.vpc.private_subnets
   ami                         = var.ami
   instance_type               = var.instance_type
   block_device_mappings       = var.block_device_mappings
@@ -227,4 +236,24 @@ module "servers" {
   tags = merge({
     "Role" = "server",
   }, local.ccm_tags, var.tags)
+}
+
+module "vpc" {
+  source   = "./modules/vpc"
+  name     = "${local.uname}-rke2-vpc"
+  vpc_cidr = var.vpc_cidr
+
+}
+
+module "bastion" {
+  depends_on = [module.servers]
+  source     = "./modules/bastion"
+
+  ami_id              = var.ami
+  vpc_id              = module.vpc.vpc_id
+  instance_type       = "t3.micro"
+  private_subnet_ids  = module.vpc.private_subnets
+  kubeconfig_path_arn = "${module.statestore.bucket_arn}/rke2.yaml"
+  kubeconfig_path     = "s3://${module.statestore.bucket}/rke2.yaml"
+
 }

@@ -135,7 +135,9 @@ fetch_token() {
   # Either
   #   a) fetch token from s3 bucket
   #   b) fail
-  if token=$(aws s3 cp "s3://${token_bucket}/${token_object}" - 2>/dev/null);then
+  echo ${token_object}
+  if token=$(aws s3 cp "s3://${token_object}" - 2>/dev/null);then
+    
     info "Found token from s3 object"
   else
     fatal "Could not find cluster token from s3"

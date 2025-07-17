@@ -80,6 +80,31 @@ data "aws_iam_policy_document" "aws_required" {
   }
 }
 
+data "aws_iam_policy_document" "ssm_session" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ssm:UpdateInstanceInformation",
+      "ssm:DescribeInstanceInformation",
+      "ssm:GetCommandInvocation",
+      "ssm:ListCommandInvocations",
+      "ssm:ListCommands",
+      "ssm:SendCommand",
+      "ssm:StartSession",
+      "ssm:TerminateSession",
+      "ssm:DescribeSessions",
+      "ssm:GetSession",
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel",
+      "ec2:DescribeInstances"
+    ]
+
+    resources = ["*"]
+  }
+}
+
 # Required IAM Policy for AWS CCM
 data "aws_iam_policy_document" "aws_ccm" {
   count = var.iam_instance_profile == "" && var.enable_ccm ? 1 : 0

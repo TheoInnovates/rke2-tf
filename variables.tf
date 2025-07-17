@@ -1,28 +1,13 @@
 variable "cluster_name" {
   description = "Name of the rkegov cluster to create"
   type        = string
+  default     = "cloud-enabled"
 }
 
 variable "unique_suffix" {
   description = "Enables/disables generation of a unique suffix to cluster name"
   type        = bool
   default     = true
-}
-
-variable "vpc_id" {
-  description = "VPC ID to create resources in"
-  type        = string
-}
-
-variable "lb_subnets" {
-  description = "List of subnet IDs to create load balancer in"
-  default     = null
-  type        = list(string)
-}
-
-variable "subnets" {
-  description = "List of subnet IDs to create nodes in"
-  type        = list(string)
 }
 
 variable "tags" {
@@ -43,6 +28,7 @@ variable "instance_type" {
 variable "ami" {
   description = "Server pool ami"
   type        = string
+  default     = "ami-0dfc569a8686b9320"
 }
 
 variable "iam_instance_profile" {
@@ -89,6 +75,12 @@ variable "spot" {
   description = "Toggle spot requests for server pool"
   type        = bool
   default     = false
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
 }
 
 variable "ssh_authorized_keys" {
@@ -189,19 +181,19 @@ variable "post_userdata" {
 variable "enable_autoscaler" {
   description = "Toggle enabling policies required for cluster autoscaler to work"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "enable_ccm" {
   description = "Toggle enabling the cluster as aws aware, this will ensure the appropriate IAM policies are present"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "ccm_external" {
   description = "Set kubelet arg 'cloud-provider-name' value to 'external'.  Requires manual install of CCM."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "wait_for_capacity_timeout" {

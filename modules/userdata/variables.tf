@@ -29,13 +29,13 @@ variable "config" {
 variable "ccm" {
   description = "Toggle cloud controller manager"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "ccm_external" {
   description = "Set kubelet arg 'cloud-provider-name' value to 'external'.  Requires manual install of CCM."
   type        = bool
-  default     = false
+  default     = true
 }
 
 #
