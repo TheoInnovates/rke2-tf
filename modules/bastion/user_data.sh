@@ -47,3 +47,19 @@ echo 'complete -o default -F __start_kubectl k' >> /etc/bashrc
 mkdir -p ~/.kube
 aws s3 cp ${kubeconfig_path} ~/.kube/config
 chmod 600 ~/.kube/config
+
+# Install AWS Cloud Controller Manager
+helm repo add aws-cloud-controller-manager https://kubernetes.github.io/cloud-provider-aws
+helm repo update
+helm install aws-cloud-controller-manager aws-cloud-controller-manager/aws-cloud-controller-manager \
+  --namespace kube-system \
+  --set-json 'args=["--v=2", "--cloud-provider=aws", "--allocate-node-cidrs=false", "--configure-cloud-routes=false"]' \
+  --set-string 'nodeSelector.node-role\.kubernetes\.io/control-plane=true'
+
+# Install Cluster Autoscaler
+helm repo add autoscaler https://kubernetes.github.io/autoscaler
+helm repo update
+helm install autoscaler autoscaler/cluster-autoscaler \
+  --namespace kube-system \
+  --set autoDiscovery.clusterName=${cluster_name} \
+  --set awsRegion=${aws_region} \

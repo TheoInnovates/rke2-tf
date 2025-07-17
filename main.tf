@@ -255,5 +255,5 @@ module "bastion" {
   private_subnet_ids  = module.vpc.private_subnets
   kubeconfig_path_arn = "${module.statestore.bucket_arn}/rke2.yaml"
   kubeconfig_path     = "s3://${module.statestore.bucket}/rke2.yaml"
-
+  cluster_name        = local.uname
 }

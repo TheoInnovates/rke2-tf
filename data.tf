@@ -123,7 +123,7 @@ data "aws_iam_policy_document" "aws_ccm" {
       "ec2:DescribeSecurityGroups",
       "ec2:DescribeSubnets",
       "ec2:DescribeVolumes",
-      "ec2:DescribeAvailabilityZones",  # This was missing!
+      "ec2:DescribeAvailabilityZones", # This was missing!
       "ec2:DescribeAccountAttributes",
       "ec2:CreateSecurityGroup",
       "ec2:CreateTags",

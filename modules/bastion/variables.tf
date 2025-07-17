@@ -24,3 +24,7 @@ variable "kubeconfig_path_arn" {
 variable "kubeconfig_path" {
   type = string
 }
+
+variable "cluster_name" {
+  type = string
+}

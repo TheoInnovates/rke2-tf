@@ -1,3 +1,5 @@
+data "aws_region" "current" {}
+
 data "aws_iam_policy_document" "ssm_session" {
   statement {
     effect = "Allow"
