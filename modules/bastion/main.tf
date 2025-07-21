@@ -44,7 +44,7 @@ resource "aws_launch_template" "bastion" {
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     kubeconfig_path = var.kubeconfig_path
     cluster_name    = var.cluster_name
-    aws_region = data.aws_region.current.name }))
+  aws_region = data.aws_region.current.name }))
 
 }
 

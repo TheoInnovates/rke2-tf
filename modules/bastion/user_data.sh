@@ -54,7 +54,13 @@ helm repo update
 helm install aws-cloud-controller-manager aws-cloud-controller-manager/aws-cloud-controller-manager \
   --namespace kube-system \
   --set-json 'args=["--v=2", "--cloud-provider=aws", "--allocate-node-cidrs=false", "--configure-cloud-routes=false"]' \
-  --set-string 'nodeSelector.node-role\.kubernetes\.io/control-plane=true'
+  --set nodeSelector."node-role\.kubernetes\.io/control-plane"="" \
+  --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
+  --set tolerations[0].operator="Exists" \
+  --set tolerations[0].effect="NoSchedule" \
+  --set tolerations[1].key="node-role.kubernetes.io/master" \
+  --set tolerations[1].operator="Exists" \
+  --set tolerations[1].effect="NoSchedule"
 
 # Install Cluster Autoscaler
 helm repo add autoscaler https://kubernetes.github.io/autoscaler
@@ -63,3 +69,45 @@ helm install autoscaler autoscaler/cluster-autoscaler \
   --namespace kube-system \
   --set autoDiscovery.clusterName=${cluster_name} \
   --set awsRegion=${aws_region} \
+  --set nodeSelector."node-role\.kubernetes\.io/control-plane"="" \
+  --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
+  --set tolerations[0].operator="Exists" \
+  --set tolerations[0].effect="NoSchedule" \
+  --set tolerations[1].key="node-role.kubernetes.io/master" \
+  --set tolerations[1].operator="Exists" \
+  --set tolerations[1].effect="NoSchedule"
+
+# Add jetstack repository & Install cert-manager
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm install cert-manager jetstack/cert-manager \
+    --namespace cert-manager \
+    --create-namespace \
+    --version v1.13.0 \
+    --set installCRDs=true \
+    --set nodeSelector."node-role\.kubernetes\.io/control-plane"="" \
+    --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
+    --set tolerations[0].operator="Exists" \
+    --set tolerations[0].effect="NoSchedule" \
+    --set tolerations[1].key="node-role.kubernetes.io/master" \
+    --set tolerations[1].operator="Exists" \
+    --set tolerations[1].effect="NoSchedule"
+
+# Add EKS chart repo & Install AWS Load Balancer Controller
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+    -n kube-system \
+    --set clusterName=${cluster_name} \
+    --set serviceAccount.create=true \
+    --set serviceAccount.name=aws-load-balancer-controller \
+    --set region=${aws_region} \
+    --set nodeSelector."node-role\.kubernetes\.io/control-plane"="" \
+    --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
+    --set tolerations[0].operator="Exists" \
+    --set tolerations[0].effect="NoSchedule" \
+    --set tolerations[1].key="node-role.kubernetes.io/master" \
+    --set tolerations[1].operator="Exists" \
+    --set tolerations[1].effect="NoSchedule"
+
+

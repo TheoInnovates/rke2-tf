@@ -113,33 +113,51 @@ data "aws_iam_policy_document" "aws_ccm" {
     effect    = "Allow"
     resources = ["*"]
     actions = [
+      # Auto Scaling permissions
       "autoscaling:DescribeAutoScalingGroups",
       "autoscaling:DescribeLaunchConfigurations",
       "autoscaling:DescribeTags",
       "autoscaling:DescribeAutoScalingInstances",
+
+      # EC2 permissions
       "ec2:DescribeInstances",
       "ec2:DescribeRegions",
       "ec2:DescribeRouteTables",
       "ec2:DescribeSecurityGroups",
       "ec2:DescribeSubnets",
       "ec2:DescribeVolumes",
-      "ec2:DescribeAvailabilityZones", # This was missing!
+      "ec2:DescribeAvailabilityZones",
       "ec2:DescribeAccountAttributes",
+      "ec2:DescribeInternetGateways",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DescribeNetworkInterfaceAttribute",
+      "ec2:DescribeVpcs",
+      "ec2:DescribeVpcEndpoints",
+      "ec2:DescribeVpcPeeringConnections",
+      "ec2:DescribeCoipPools",
+      "ec2:GetCoipPoolUsage",
+
+      # EC2 modification permissions
       "ec2:CreateSecurityGroup",
       "ec2:CreateTags",
       "ec2:CreateVolume",
+      "ec2:CreateNetworkInterface",
       "ec2:ModifyInstanceAttribute",
       "ec2:ModifyVolume",
+      "ec2:ModifyNetworkInterfaceAttribute",
       "ec2:AttachVolume",
       "ec2:AuthorizeSecurityGroupIngress",
       "ec2:CreateRoute",
       "ec2:DeleteRoute",
       "ec2:DeleteSecurityGroup",
       "ec2:DeleteVolume",
+      "ec2:DeleteNetworkInterface",
       "ec2:DetachVolume",
       "ec2:RevokeSecurityGroupIngress",
-      "ec2:DescribeVpcs",
+
+      # ELB Classic permissions
       "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:RemoveTags",
       "elasticloadbalancing:AttachLoadBalancerToSubnets",
       "elasticloadbalancing:ApplySecurityGroupsToLoadBalancer",
       "elasticloadbalancing:CreateLoadBalancer",
@@ -150,26 +168,66 @@ data "aws_iam_policy_document" "aws_ccm" {
       "elasticloadbalancing:DeleteLoadBalancerListeners",
       "elasticloadbalancing:DescribeLoadBalancers",
       "elasticloadbalancing:DescribeLoadBalancerAttributes",
+      "elasticloadbalancing:DescribeLoadBalancerPolicies",
+      "elasticloadbalancing:DescribeTags",
       "elasticloadbalancing:DetachLoadBalancerFromSubnets",
       "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
       "elasticloadbalancing:ModifyLoadBalancerAttributes",
       "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
       "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer",
-      "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:SetLoadBalancerPoliciesOfListener",
+
+      # ELB v2 (ALB/NLB) permissions
       "elasticloadbalancing:CreateListener",
       "elasticloadbalancing:CreateTargetGroup",
+      "elasticloadbalancing:CreateRule",
       "elasticloadbalancing:DeleteListener",
       "elasticloadbalancing:DeleteTargetGroup",
+      "elasticloadbalancing:DeleteRule",
       "elasticloadbalancing:DescribeListeners",
-      "elasticloadbalancing:DescribeLoadBalancerPolicies",
       "elasticloadbalancing:DescribeTargetGroups",
       "elasticloadbalancing:DescribeTargetHealth",
+      "elasticloadbalancing:DescribeTargetGroupAttributes",
+      "elasticloadbalancing:DescribeListenerAttributes",
+      "elasticloadbalancing:DescribeRules",
       "elasticloadbalancing:ModifyListener",
       "elasticloadbalancing:ModifyTargetGroup",
+      "elasticloadbalancing:ModifyTargetGroupAttributes",
+      "elasticloadbalancing:ModifyRule",
       "elasticloadbalancing:RegisterTargets",
       "elasticloadbalancing:DeregisterTargets",
-      "elasticloadbalancing:SetLoadBalancerPoliciesOfListener",
+      "elasticloadbalancing:SetWebAcl",
+      "elasticloadbalancing:SetSecurityGroups",
+      "elasticloadbalancing:SetSubnets",
+      "elasticloadbalancing:SetIpAddressType",
+
+      # IAM permissions
       "iam:CreateServiceLinkedRole",
+      "iam:ListServerCertificates",
+      "iam:GetServerCertificate",
+      "iam:PassRole",
+
+      # ACM permissions
+      "acm:ListCertificates",
+      "acm:DescribeCertificate",
+      "acm:GetCertificate",
+
+      # WAF permissions
+      "wafv2:GetWebACL",
+      "wafv2:GetWebACLForResource",
+      "wafv2:AssociateWebACL",
+      "wafv2:DisassociateWebACL",
+      "waf-regional:GetWebACL",
+      "waf-regional:GetWebACLForResource",
+      "waf-regional:AssociateWebACL",
+      "waf-regional:DisassociateWebACL",
+
+      # Shield permissions
+      "shield:DescribeProtection",
+      "shield:CreateProtection",
+      "shield:DescribeSubscription",
+
+      # KMS permissions
       "kms:DescribeKey"
     ]
   }

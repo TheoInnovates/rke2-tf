@@ -99,6 +99,21 @@ variable "spot" {
   default     = false
 }
 
+variable "associate_public_ip_address" {
+  default = null
+  type    = bool
+}
+
+variable "target_group_arns" {
+  type    = list(string)
+  default = []
+}
+
+variable "min_elb_capacity" {
+  type    = number
+  default = null
+}
+
 variable "extra_security_group_ids" {
   description = "List of additional security group IDs"
   type        = list(string)

@@ -122,6 +122,12 @@ variable "controlplane_allowed_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
+variable "alb_allowed_cidrs" {
+  description = "Nginx ALB security group allowed cidr ranges"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
 variable "controlplane_access_logs_bucket" {
   description = "Bucket name for logging requests to control plane load balancer"
   type        = string
@@ -157,7 +163,14 @@ variable "rke2_version" {
 variable "rke2_config" {
   description = "Server pool additional configuration passed as rke2 config file, see https://docs.rke2.io/install/install_options/server_config for full list of options"
   type        = string
-  default     = ""
+  default     = <<-EOT
+node-taint:
+  - "node-role.kubernetes.io/control-plane:NoSchedule"
+  - "node-role.kubernetes.io/etcd:NoExecute"  
+  - "node-role.kubernetes.io/master:NoSchedule"
+cloud-controller-manager-arg:
+  - "--controllers=-service"
+EOT
 }
 
 variable "download" {
@@ -251,4 +264,22 @@ variable "create_acl" {
   description = "Toggle creation of ACL for statestore bucket"
   type        = bool
   default     = true
+}
+
+variable "alb_enable_cross_zone_load_balancing" {
+  description = "Enable cross-zone load balancing for the ALB"
+  type        = bool
+  default     = false
+}
+
+variable "alb_access_logs_bucket" {
+  description = "S3 bucket for ALB access logs"
+  type        = string
+  default     = "disabled"
+}
+
+variable "alb_internal" {
+  description = "Whether the ALB should be internal"
+  type        = bool
+  default     = false
 }

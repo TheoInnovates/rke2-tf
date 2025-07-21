@@ -1,3 +1,5 @@
+
+
 locals {
   # Create a unique cluster name we'll prefix to all resources created and ensure it's lowercase
   uname = var.unique_suffix ? lower("${var.cluster_name}-${random_string.uid.result}") : lower(var.cluster_name)
@@ -17,8 +19,10 @@ locals {
     token      = module.statestore.token
   }
 
-  lb_subnets        = module.vpc.private_subnets
-  target_group_arns = module.cp_lb.target_group_arns
+  lb_subnets            = module.vpc.private_subnets
+  alb_subnets           = module.vpc.public_subnets
+  target_group_arns     = module.cp_lb.target_group_arns
+  alb_target_group_arns = module.nginx_alb.target_group_arns
 }
 
 resource "random_string" "uid" {
@@ -238,6 +242,47 @@ module "servers" {
   }, local.ccm_tags, var.tags)
 }
 
+#
+# Agent/Worker Nodepool
+#
+module "agents" {
+  depends_on = [module.servers]
+  source     = "./modules/agent-nodepool"
+
+  name    = "${local.uname}-agent"
+  vpc_id  = module.vpc.vpc_id
+  subnets = module.vpc.private_subnets
+  ami     = var.ami
+
+  instance_type = var.instance_type
+
+  spot                        = var.spot
+  target_group_arns           = local.alb_target_group_arns
+  wait_for_capacity_timeout   = var.wait_for_capacity_timeout
+  metadata_options            = var.metadata_options
+  associate_public_ip_address = var.associate_public_ip_address
+
+  asg = {
+    min                  = 1
+    max                  = 7
+    desired              = 1
+    suspended_processes  = var.suspended_processes
+    termination_policies = var.termination_policies
+  }
+
+  min_elb_capacity = 1
+
+  enable_autoscaler   = var.enable_autoscaler
+  enable_ccm          = var.enable_ccm
+  ssh_authorized_keys = var.ssh_authorized_keys
+  cluster_data        = local.cluster_data
+  rke2_channel        = var.rke2_channel
+
+  tags = merge({
+    "Role" = "agent",
+  }, local.ccm_tags, var.tags)
+}
+
 module "vpc" {
   source   = "./modules/vpc"
   name     = "${local.uname}-rke2-vpc"
@@ -246,7 +291,7 @@ module "vpc" {
 }
 
 module "bastion" {
-  depends_on = [module.servers]
+  depends_on = [module.servers, module.agents]
   source     = "./modules/bastion"
 
   ami_id              = var.ami
@@ -257,3 +302,18 @@ module "bastion" {
   kubeconfig_path     = "s3://${module.statestore.bucket}/rke2.yaml"
   cluster_name        = local.uname
 }
+
+module "nginx_alb" {
+  source  = "./modules/alb"
+  name    = local.uname
+  subnets = local.alb_subnets
+  vpc_id  = module.vpc.vpc_id
+
+  enable_cross_zone_load_balancing = var.alb_enable_cross_zone_load_balancing
+  internal                         = var.alb_internal
+  access_logs_bucket               = var.alb_access_logs_bucket
+  alb_ingress_cidr_blocks          = var.alb_allowed_cidrs
+
+  tags = merge({}, local.default_tags, var.tags)
+}
+
