@@ -75,6 +75,42 @@ module "cp_lb" {
 # Security Groups
 #
 
+# Allow ALB to reach nginx on port 80 (if using IP target type)
+resource "aws_security_group_rule" "alb_to_cluster_http" {
+
+  type                     = "ingress"
+  from_port                = 80
+  to_port                  = 80
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.cluster.id
+  source_security_group_id = module.nginx_alb.security_group_id
+  description              = "Allow ALB to reach pods on port 80"
+}
+
+# Allow ALB to reach full NodePort range (for flexibility)
+resource "aws_security_group_rule" "alb_to_cluster_nodeport_range" {
+
+  type                     = "ingress"
+  from_port                = 30000
+  to_port                  = 32767
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.cluster.id
+  source_security_group_id = module.nginx_alb.security_group_id
+  description              = "Allow ALB to reach NodePort services (30000-32767)"
+}
+
+# Allow ALB to reach specific nginx NodePort (more restrictive)
+resource "aws_security_group_rule" "alb_to_nginx_nodeport" {
+
+  type                     = "ingress"
+  from_port                = var.nginx_nodeport
+  to_port                  = var.nginx_nodeport
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.cluster.id
+  source_security_group_id = module.nginx_alb.security_group_id
+  description              = "Allow ALB to reach nginx NodePort ${var.nginx_nodeport}"
+}
+
 # Shared Cluster Security Group
 resource "aws_security_group" "cluster" {
   name        = "${local.uname}-rke2-cluster"

@@ -164,10 +164,6 @@ variable "rke2_config" {
   description = "Server pool additional configuration passed as rke2 config file, see https://docs.rke2.io/install/install_options/server_config for full list of options"
   type        = string
   default     = <<-EOT
-node-taint:
-  - "node-role.kubernetes.io/control-plane:NoSchedule"
-  - "node-role.kubernetes.io/etcd:NoExecute"  
-  - "node-role.kubernetes.io/master:NoSchedule"
 cloud-controller-manager-arg:
   - "--controllers=-service"
 EOT
@@ -282,4 +278,22 @@ variable "alb_internal" {
   description = "Whether the ALB should be internal"
   type        = bool
   default     = false
+}
+
+variable "allow_alb_to_cluster" {
+  description = "Allow ALB security group to access cluster nodes"
+  type        = bool
+  default     = true
+}
+
+variable "nginx_nodeport" {
+  description = "NodePort for nginx service"
+  type        = number
+  default     = 30080
+}
+
+variable "allow_full_nodeport_range" {
+  description = "Allow ALB to access full NodePort range (30000-32767)"
+  type        = bool
+  default     = true
 }
