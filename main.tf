@@ -22,7 +22,6 @@ locals {
   lb_subnets            = module.vpc.private_subnets
   alb_subnets           = module.vpc.public_subnets
   target_group_arns     = module.cp_lb.target_group_arns
-  alb_target_group_arns = module.nginx_alb.target_group_arns
 }
 
 resource "random_string" "uid" {
@@ -293,7 +292,6 @@ module "agents" {
   instance_type = var.instance_type
 
   spot                        = var.spot
-  target_group_arns           = local.alb_target_group_arns
   wait_for_capacity_timeout   = var.wait_for_capacity_timeout
   metadata_options            = var.metadata_options
   associate_public_ip_address = var.associate_public_ip_address

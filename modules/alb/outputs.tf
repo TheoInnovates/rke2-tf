@@ -14,10 +14,6 @@ output "nginx_alb_zone_id" {
   value       = aws_lb.nginx_alb.zone_id
 }
 
-output "target_group_arns" {
-  description = "ARN of HTTP target group"
-  value       = [aws_lb_target_group.nginx_http.arn]
-}
 
 output "security_group_id" {
   description = "Name of the nginx ALB"

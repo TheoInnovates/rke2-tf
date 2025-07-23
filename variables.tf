@@ -163,10 +163,7 @@ variable "rke2_version" {
 variable "rke2_config" {
   description = "Server pool additional configuration passed as rke2 config file, see https://docs.rke2.io/install/install_options/server_config for full list of options"
   type        = string
-  default     = <<-EOT
-cloud-controller-manager-arg:
-  - "--controllers=-service"
-EOT
+  default     = ""
 }
 
 variable "download" {
