@@ -76,6 +76,7 @@ wait_for_cluster_ready() {
   while [ $attempt -lt $max_attempts ]; do
     echo "Checking cluster readiness (attempt $((attempt + 1))/$max_attempts)..."
     
+    export KUBECONFIG=/root/.kube/config
     # Simple test: try kubectl get nodes first
     if kubectl get nodes >/dev/null 2>&1; then
       kubectl get nodes -o wide
