@@ -58,7 +58,8 @@ wait_for_cluster_ready() {
       echo "Cluster is responsive, checking node readiness..."
       
       # Wait for at least one control-plane node to be Ready
-      if kubectl get nodes --selector='node-role.kubernetes.io/control-plane' --no-headers 2>/dev/null | grep "Ready"; then
+      ready_cp_nodes=$(kubectl get nodes --selector='node-role.kubernetes.io/control-plane' --no-headers 2>/dev/null | grep -c "Ready" || echo "0")
+      if [ "$ready_cp_nodes" -gt 0 ]; then
         echo "Control plane nodes are ready!"
         return 0
       fi

@@ -68,7 +68,7 @@ variable "extra_security_group_ids" {
 variable "servers" {
   description = "Number of servers to create"
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "spot" {

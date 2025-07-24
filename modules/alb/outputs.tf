@@ -18,5 +18,5 @@ output "nginx_alb_zone_id" {
 output "security_group_id" {
   description = "Name of the nginx ALB"
   value       = aws_security_group.nginx_alb.id
-  
+
 }

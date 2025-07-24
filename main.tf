@@ -19,9 +19,9 @@ locals {
     token      = module.statestore.token
   }
 
-  lb_subnets            = module.vpc.private_subnets
-  alb_subnets           = module.vpc.public_subnets
-  target_group_arns     = module.cp_lb.target_group_arns
+  lb_subnets        = module.vpc.private_subnets
+  alb_subnets       = module.vpc.public_subnets
+  target_group_arns = module.cp_lb.target_group_arns
 }
 
 resource "random_string" "uid" {
