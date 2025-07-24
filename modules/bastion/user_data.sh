@@ -148,7 +148,7 @@ install_ccm() {
     --timeout 10m \
     --wait \
     --set-json 'args=["--v=2", "--cloud-provider=aws", "--allocate-node-cidrs=false", "--configure-cloud-routes=false"]' \
-    --set nodeSelector."node-role\.kubernetes\.io/control-plane"="" \
+    --set-string 'nodeSelector.node-role\.kubernetes\.io/control-plane'='true' \
     --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
     --set tolerations[0].operator="Exists" \
     --set tolerations[0].effect="NoSchedule" \
@@ -207,7 +207,7 @@ install_cluster_autoscaler() {
     --wait \
     --set autoDiscovery.clusterName=${cluster_name} \
     --set awsRegion=${aws_region} \
-    --set nodeSelector."node-role\.kubernetes\.io/control-plane"="" \
+    --set-string 'nodeSelector.node-role\.kubernetes\.io/control-plane'='true' \
     --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
     --set tolerations[0].operator="Exists" \
     --set tolerations[0].effect="NoSchedule" \
@@ -237,7 +237,7 @@ install_cert_manager() {
     --timeout 10m \
     --wait \
     --set installCRDs=true \
-    --set nodeSelector."node-role\.kubernetes\.io/control-plane"="" \
+    --set-string 'nodeSelector.node-role\.kubernetes\.io/control-plane'='true' \
     --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
     --set tolerations[0].operator="Exists" \
     --set tolerations[0].effect="NoSchedule" \
@@ -268,7 +268,7 @@ install_alb_controller() {
     --set serviceAccount.create=true \
     --set serviceAccount.name=aws-load-balancer-controller \
     --set region=${aws_region} \
-    --set nodeSelector."node-role\.kubernetes\.io/control-plane"="" \
+    --set-string 'nodeSelector.node-role\.kubernetes\.io/control-plane'='true' \
     --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
     --set tolerations[0].operator="Exists" \
     --set tolerations[0].effect="NoSchedule" \
