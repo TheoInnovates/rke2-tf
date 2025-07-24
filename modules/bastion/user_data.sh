@@ -43,34 +43,69 @@ echo 'alias k=kubectl' >> /etc/bashrc
 echo 'complete -o default -F __start_kubectl k' >> /etc/bashrc
 
 # Fetch kubeconfig from S3
-mkdir -p ~/.kube
-aws s3 cp ${kubeconfig_path} ~/.kube/config
-chmod 600 ~/.kube/config
-
-# Wait for cluster to be ready
-echo "Waiting for cluster to be ready..."
-wait_for_cluster_ready() {
-  local max_attempts=60
+echo "Fetching kubeconfig from S3..."
+wait_for_kubeconfig() {
+  local max_attempts=30
   local attempt=0
   
   while [ $attempt -lt $max_attempts ]; do
-    if kubectl get nodes >/dev/null 2>&1; then
-      echo "Cluster is responsive, checking node readiness..."
-      
-      # Wait for at least one control-plane node to be Ready
-      ready_cp_nodes=$(kubectl get nodes --selector='node-role.kubernetes.io/control-plane' --no-headers 2>/dev/null | grep -c "Ready" || echo "0")
-      if [ "$ready_cp_nodes" -gt 0 ]; then
-        echo "Control plane nodes are ready!"
-        return 0
-      fi
+    echo "Attempting to fetch kubeconfig (attempt $((attempt + 1))/$max_attempts)..."
+    
+    if aws s3 cp ${kubeconfig_path} ~/.kube/config; then
+      chmod 600 ~/.kube/config
+      echo "Kubeconfig downloaded successfully"
+      return 0
+    else
+      echo "Failed to download kubeconfig, retrying..."
+      echo "Kubeconfig not yet available in S3..."
     fi
     
-    echo "Waiting for cluster... (attempt $((attempt + 1))/$max_attempts)"
     sleep 30
     attempt=$((attempt + 1))
   done
   
-  echo "Timeout waiting for cluster to be ready"
+  echo "Failed to fetch kubeconfig after $max_attempts attempts"
+  return 1
+}
+
+wait_for_cluster_ready() {
+  local max_attempts=60
+  local attempt=0
+  
+  echo "Waiting for cluster to be ready..."
+  while [ $attempt -lt $max_attempts ]; do
+    echo "Checking cluster readiness (attempt $((attempt + 1))/$max_attempts)..."
+    
+    # Simple test: try kubectl get nodes first
+    if kubectl get nodes >/dev/null 2>&1; then
+      kubectl get nodes -o wide
+      echo "kubectl can connect to cluster successfully"
+      
+      # Now check specifically for ready control-plane nodes
+      local ready_cp_nodes=$(kubectl get nodes --selector='node-role.kubernetes.io/control-plane' --no-headers 2>/dev/null | grep -c "Ready" || echo "0")
+      
+      echo "Found $ready_cp_nodes ready control-plane nodes"
+      
+      if [ "$ready_cp_nodes" -gt 0 ]; then
+        echo "SUCCESS: Control plane nodes are ready!"
+        echo "Cluster node status:"
+        kubectl get nodes
+        return 0
+      else
+        echo "Control-plane nodes exist but are not Ready yet..."
+      fi
+    else
+      echo "kubectl cannot connect to cluster yet, waiting..."
+    fi
+    
+    sleep 30
+    attempt=$((attempt + 1))
+  done
+  
+  echo "TIMEOUT: Cluster not ready after $max_attempts attempts"
+  echo "Final cluster state:"
+  kubectl get nodes 2>/dev/null || echo "Cannot get nodes"
+  kubectl get pods -n kube-system 2>/dev/null || echo "Cannot get kube-system pods"
   return 1
 }
 
@@ -135,7 +170,7 @@ install_ccm() {
     local wait_count=0
     while [ $wait_count -lt 30 ]; do
       # Check if any nodes still have the uninitialized taint
-      local uninitialized_nodes=$(kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.taints[?(@.key=="node.cloudprovider.kubernetes.io/uninitialized")]}{"\n"}{end}' | grep "uninitialized" | wc -l)
+      local uninitialized_nodes=$(kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.taints[?(@.key=="node.cloudprovider.kubernetes.io/uninitialized")]}{"\n"}{end}' | grep -c "uninitialized" 2>/dev/null || echo "0")
       
       if [ "$uninitialized_nodes" -eq 0 ]; then
         echo "All nodes have been initialized by CCM!"
@@ -245,28 +280,42 @@ install_alb_controller() {
 
 # Execute installations in order
 {
-  echo "Starting cluster component installations..."
+  echo "========================================="
+  echo "Starting bastion setup at $(date)"
+  echo "Cluster: ${cluster_name}"
+  echo "Region: ${aws_region}"
+  echo "Kubeconfig path: ${kubeconfig_path}"
+  echo "========================================="
   
-  if wait_for_cluster_ready; then
-    echo "Cluster is ready, proceeding with installations..."
+  # Wait for kubeconfig to be available
+  if wait_for_kubeconfig; then
+    echo "Kubeconfig is ready, proceeding with cluster readiness check..."
     
-    # Install components in the correct order
-    install_ccm
-    sleep 30  # Give CCM time to initialize nodes
-    
-    install_cluster_autoscaler
-    install_cert_manager
-    install_alb_controller
-    
-    echo "All installations completed successfully!"
-    
-    # Final status check
-    echo "Final cluster status:"
-    kubectl get nodes -o wide
-    kubectl get pods -n kube-system
-    
+    # Wait for cluster to be ready
+    if wait_for_cluster_ready; then
+      echo "Cluster is ready, proceeding with installations..."
+      
+      # Install components in the correct order
+      install_ccm
+      sleep 30  # Give CCM time to initialize nodes
+      
+      install_cluster_autoscaler
+      install_cert_manager
+      install_alb_controller
+      
+      echo "All installations completed successfully!"
+      
+      # Final status check
+      echo "Final cluster status:"
+      kubectl get nodes -o wide
+      kubectl get pods -n kube-system
+      
+    else
+      echo "Cluster readiness check failed"
+      exit 1
+    fi
   else
-    echo "Cluster not ready after timeout, skipping installations"
+    echo "Failed to obtain kubeconfig"
     exit 1
   fi
 } 2>&1 | tee /var/log/bastion-setup.log
