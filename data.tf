@@ -11,6 +11,13 @@ module "init" {
   ccm_external  = var.ccm_external
   agent         = false
   rke2_start    = var.rke2_start
+  nginx_replica_count  = var.nginx_replica_count
+  nlb_scheme          = var.nlb_scheme
+  nginx_cpu_limit     = var.nginx_cpu_limit
+  nginx_memory_limit  = var.nginx_memory_limit
+  nginx_cpu_request   = var.nginx_cpu_request
+  nginx_memory_request = var.nginx_memory_request
+  public_subnets              = join(",", module.vpc.public_subnets)
 }
 
 data "cloudinit_config" "this" {

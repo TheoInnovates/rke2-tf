@@ -85,8 +85,8 @@ variable "asg" {
   })
   default = {
     min                  = 1
-    max                  = 7
-    desired              = 3
+    max                  = 1
+    desired              = 1
     suspended_processes  = []
     termination_policies = []
   }
@@ -116,4 +116,9 @@ variable "extra_cloud_config_config" {
   description = "extra config to append to cloud-config"
   type        = string
   default     = ""
+}
+
+variable "public_subnets" {
+  description = "Comma-separated list of public subnet IDs for NLB"
+  type        = string
 }

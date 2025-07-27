@@ -11,6 +11,13 @@ output "rke2_templated" {
 
     pre_userdata  = var.pre_userdata
     post_userdata = var.post_userdata
+    nginx_replica_count  = var.nginx_replica_count
+    nlb_scheme          = var.nlb_scheme
+    nginx_cpu_limit     = var.nginx_cpu_limit
+    nginx_memory_limit  = var.nginx_memory_limit
+    nginx_cpu_request   = var.nginx_cpu_request
+    nginx_memory_request = var.nginx_memory_request
+    public_subnets = var.public_subnets
 
     rke2_start = var.rke2_start
   })

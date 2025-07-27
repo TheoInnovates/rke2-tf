@@ -294,3 +294,40 @@ variable "allow_full_nodeport_range" {
   type        = bool
   default     = true
 }
+
+variable "nginx_replica_count" {
+  description = "Number of nginx ingress controller replicas"
+  type        = number
+  default     = 3
+}
+
+variable "nlb_scheme" {
+  description = "NLB scheme (internet-facing or internal)"
+  type        = string
+  default     = "internet-facing"
+
+}
+
+variable "nginx_cpu_limit" {
+  description = "CPU limit for nginx ingress controller pods"
+  type        = string
+  default     = "1000m"
+}
+
+variable "nginx_memory_limit" {
+  description = "Memory limit for nginx ingress controller pods"
+  type        = string
+  default     = "1Gi"
+}
+
+variable "nginx_cpu_request" {
+  description = "CPU request for nginx ingress controller pods"
+  type        = string
+  default     = "500m"
+}
+
+variable "nginx_memory_request" {
+  description = "Memory request for nginx ingress controller pods"
+  type        = string
+  default     = "512Mi"
+}

@@ -72,3 +72,49 @@ security_group_id        = aws_security_group.cluster.id
 source_security_group_id = aws_security_group.nginx_alb.id
 } */
 
+# Target Group for Nginx pods
+resource "aws_lb_target_group" "nginx" {
+  name        = "${var.name}-nginx-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "instance" # Use IP targeting for direct pod registration
+
+  # Health check configuration
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/"
+    matcher             = "200"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+  }
+
+  # Important: Preserve target group when recreating
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = merge({
+    Name        = "${var.name}-nginx-target-group"
+    Application = "nginx"
+    ManagedBy   = "terraform"
+  }, var.tags)
+}
+
+# HTTP Listener for the ALB
+resource "aws_lb_listener" "nginx_http" {
+  load_balancer_arn = aws_lb.nginx_alb.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.nginx.arn
+  }
+
+  tags = var.tags
+}

@@ -59,16 +59,23 @@ resource "aws_iam_role_policy" "get_token" {
 module "init" {
   source = "../userdata"
 
-  server_url    = var.cluster_data.server_url
-  token_bucket  = var.cluster_data.token.bucket
-  token_object  = var.cluster_data.token.object
-  config        = var.rke2_config
-  pre_userdata  = var.pre_userdata
-  post_userdata = var.post_userdata
-  ccm           = var.enable_ccm
-  ccm_external  = var.ccm_external
-  agent         = true
-  rke2_start    = var.rke2_start
+  server_url           = var.cluster_data.server_url
+  token_bucket         = var.cluster_data.token.bucket
+  token_object         = var.cluster_data.token.object
+  config               = var.rke2_config
+  pre_userdata         = var.pre_userdata
+  post_userdata        = var.post_userdata
+  ccm                  = var.enable_ccm
+  ccm_external         = var.ccm_external
+  agent                = true
+  rke2_start           = var.rke2_start
+  nginx_replica_count  = var.nginx_replica_count
+  nlb_scheme           = var.nlb_scheme
+  nginx_cpu_limit      = var.nginx_cpu_limit
+  nginx_memory_limit   = var.nginx_memory_limit
+  nginx_cpu_request    = var.nginx_cpu_request
+  nginx_memory_request = var.nginx_memory_request
+  public_subnets = var.public_subnets
 }
 
 data "cloudinit_config" "init" {
@@ -142,6 +149,7 @@ module "nodepool" {
   spot                        = var.spot
   wait_for_capacity_timeout   = var.wait_for_capacity_timeout
   metadata_options            = var.metadata_options
+  public_subnets = var.public_subnets
 
   tags = merge({
     "Role" = "agent",

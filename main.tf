@@ -20,7 +20,7 @@ locals {
   }
 
   lb_subnets        = module.vpc.private_subnets
-  alb_subnets       = module.vpc.public_subnets
+  public_subnets       = module.vpc.public_subnets
   target_group_arns = module.cp_lb.target_group_arns
 }
 
@@ -74,7 +74,7 @@ module "cp_lb" {
 # Security Groups
 #
 
-# Allow ALB to reach nginx on port 80 (if using IP target type)
+/*# Allow ALB to reach nginx on port 80 (if using IP target type)
 resource "aws_security_group_rule" "alb_to_cluster_http" {
 
   type                     = "ingress"
@@ -96,7 +96,7 @@ resource "aws_security_group_rule" "alb_to_cluster_nodeport_range" {
   security_group_id        = aws_security_group.cluster.id
   source_security_group_id = module.nginx_alb.security_group_id
   description              = "Allow ALB to reach NodePort services (30000-32767)"
-}
+} 
 
 # Allow ALB to reach specific nginx NodePort (more restrictive)
 resource "aws_security_group_rule" "alb_to_nginx_nodeport" {
@@ -109,7 +109,7 @@ resource "aws_security_group_rule" "alb_to_nginx_nodeport" {
   source_security_group_id = module.nginx_alb.security_group_id
   description              = "Allow ALB to reach nginx NodePort ${var.nginx_nodeport}"
 }
-
+*/
 # Shared Cluster Security Group
 resource "aws_security_group" "cluster" {
   name        = "${local.uname}-rke2-cluster"
@@ -255,6 +255,7 @@ module "servers" {
   wait_for_capacity_timeout   = var.wait_for_capacity_timeout
   metadata_options            = var.metadata_options
   associate_public_ip_address = var.associate_public_ip_address
+  public_subnets              = join(",", local.public_subnets)
 
   # Overrideable variables
   userdata             = data.cloudinit_config.this.rendered
@@ -263,7 +264,7 @@ module "servers" {
   # Don't allow something not recommended within etcd scaling, set max deliberately and only control desired
   asg = {
     min                  = 1
-    max                  = 7
+    max                  = 1
     desired              = var.servers
     suspended_processes  = var.suspended_processes
     termination_policies = var.termination_policies
@@ -295,10 +296,18 @@ module "agents" {
   wait_for_capacity_timeout   = var.wait_for_capacity_timeout
   metadata_options            = var.metadata_options
   associate_public_ip_address = var.associate_public_ip_address
+  nginx_replica_count  = var.nginx_replica_count
+  nlb_scheme          = var.nlb_scheme
+  nginx_cpu_limit     = var.nginx_cpu_limit
+  nginx_memory_limit  = var.nginx_memory_limit
+  nginx_cpu_request   = var.nginx_cpu_request
+  nginx_memory_request = var.nginx_memory_request
+  public_subnets              = join(",", local.public_subnets)
+
 
   asg = {
     min                  = 1
-    max                  = 7
+    max                  = 1
     desired              = 1
     suspended_processes  = var.suspended_processes
     termination_policies = var.termination_policies
@@ -337,10 +346,10 @@ module "bastion" {
   cluster_name        = local.uname
 }
 
-module "nginx_alb" {
+/* module "nginx_alb" {
   source  = "./modules/alb"
   name    = local.uname
-  subnets = local.alb_subnets
+  subnets = local.public_subnets
   vpc_id  = module.vpc.vpc_id
 
   enable_cross_zone_load_balancing = var.alb_enable_cross_zone_load_balancing
@@ -349,5 +358,5 @@ module "nginx_alb" {
   alb_ingress_cidr_blocks          = var.alb_allowed_cidrs
 
   tags = merge({}, local.default_tags, var.tags)
-}
+} */
 

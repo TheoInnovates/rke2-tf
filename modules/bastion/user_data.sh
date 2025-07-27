@@ -218,67 +218,6 @@ install_cluster_autoscaler() {
   echo "Cluster Autoscaler installation completed"
 }
 
-# Install cert-manager
-install_cert_manager() {
-  echo "Installing cert-manager..."
-  
-  helm repo add jetstack https://charts.jetstack.io
-  helm repo update
-  
-  if helm list -n cert-manager | grep -q cert-manager; then
-    echo "cert-manager already installed, skipping..."
-    return 0
-  fi
-  
-  helm install cert-manager jetstack/cert-manager \
-    --namespace cert-manager \
-    --create-namespace \
-    --version v1.13.0 \
-    --timeout 10m \
-    --wait \
-    --set installCRDs=true \
-    --set-string 'nodeSelector.node-role\.kubernetes\.io/control-plane'='true' \
-    --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
-    --set tolerations[0].operator="Exists" \
-    --set tolerations[0].effect="NoSchedule" \
-    --set tolerations[1].key="node-role.kubernetes.io/master" \
-    --set tolerations[1].operator="Exists" \
-    --set tolerations[1].effect="NoSchedule"
-  
-  echo "cert-manager installation completed"
-}
-
-# Install AWS Load Balancer Controller
-install_alb_controller() {
-  echo "Installing AWS Load Balancer Controller..."
-  
-  helm repo add eks https://aws.github.io/eks-charts
-  helm repo update
-  
-  if helm list -n kube-system | grep -q aws-load-balancer-controller; then
-    echo "AWS Load Balancer Controller already installed, skipping..."
-    return 0
-  fi
-  
-  helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
-    -n kube-system \
-    --timeout 10m \
-    --wait \
-    --set clusterName=${cluster_name} \
-    --set serviceAccount.create=true \
-    --set serviceAccount.name=aws-load-balancer-controller \
-    --set region=${aws_region} \
-    --set-string 'nodeSelector.node-role\.kubernetes\.io/control-plane'='true' \
-    --set tolerations[0].key="node-role.kubernetes.io/control-plane" \
-    --set tolerations[0].operator="Exists" \
-    --set tolerations[0].effect="NoSchedule" \
-    --set tolerations[1].key="node-role.kubernetes.io/master" \
-    --set tolerations[1].operator="Exists" \
-    --set tolerations[1].effect="NoSchedule"
-  
-  echo "AWS Load Balancer Controller installation completed"
-}
-
 # Execute installations in order
 {
   echo "========================================="
@@ -301,8 +240,6 @@ install_alb_controller() {
       sleep 30  # Give CCM time to initialize nodes
       
       install_cluster_autoscaler
-      install_cert_manager
-      install_alb_controller
       
       echo "All installations completed successfully!"
       

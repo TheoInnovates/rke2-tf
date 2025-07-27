@@ -232,3 +232,38 @@ variable "unzip_rpm_url" {
   type        = string
   default     = ""
 }
+
+variable "nginx_replica_count" {
+  description = "Number of nginx ingress controller replicas"
+  type        = number
+}
+
+variable "nlb_scheme" {
+  description = "NLB scheme (internet-facing or internal)"
+  type        = string
+}
+
+variable "nginx_cpu_limit" {
+  description = "CPU limit for nginx ingress controller pods"
+  type        = string
+}
+
+variable "nginx_memory_limit" {
+  description = "Memory limit for nginx ingress controller pods"
+  type        = string
+}
+
+variable "nginx_cpu_request" {
+  description = "CPU request for nginx ingress controller pods"
+  type        = string
+}
+
+variable "nginx_memory_request" {
+  description = "Memory request for nginx ingress controller pods"
+  type        = string
+}
+
+variable "public_subnets" {
+  description = "Comma-separated list of public subnet IDs for NLB"
+  type        = string
+}
